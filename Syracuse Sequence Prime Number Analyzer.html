@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Syracuse Sequence Prime Analyzer</title>
+    <style>
+        :root {
+            --bg-color: #f9fafb;
+            --card-bg: #ffffff;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --prime-color: #059669;
+            --prime-bg: #d1fae5;
+            --comp-color: #4b5563;
+            --comp-bg: #f3f4f6;
+            --border: #e5e7eb;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.5;
+            padding: 2rem 1rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 1.5rem;
+            color: var(--text-main);
+            margin-bottom: 1rem;
+        }
+
+        p.description {
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        input[type="number"] {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .stat-box {
+            background: var(--bg-color);
+            padding: 1rem;
+            border-radius: 6px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 0.25rem;
+        }
+
+        .sequence-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .number-badge {
+            padding: 0.5rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        }
+
+        .number-badge.prime {
+            background-color: var(--prime-bg);
+            color: var(--prime-color);
+            border: 1px solid #34d399;
+        }
+
+        .number-badge.composite {
+            background-color: var(--comp-bg);
+            color: var(--comp-color);
+            border: 1px solid var(--border);
+        }
+        
+        .legend {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        #error-msg {
+            color: #dc2626;
+            margin-top: -1rem;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h1>Syracuse Sequence Prime Analyzer</h1>
+        <p class="description">Enter an odd starting integer to generate its Syracuse orbit. The analyzer will calculate the trajectory, test each step for primality, and reveal the prime density.</p>
+        
+        <div class="input-group">
+            <input type="number" id="start-number" placeholder="e.g., 27, 31, 73" value="27" min="3" step="2">
+            <button onclick="analyzeSequence()">Generate Sequence</button>
+        </div>
+        <div id="error-msg">Please enter a valid positive odd integer greater than 1.</div>
+
+        <div id="results" style="display: none;">
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-value" id="stat-steps">0</div>
+                    <div class="stat-label">Total Steps</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="stat-primes">0</div>
+                    <div class="stat-label">Prime Count</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="stat-density">0%</div>
+                    <div class="stat-label">Prime Density</div>
+                </div>
+            </div>
+
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: var(--prime-color);"></div>
+                    <span>Prime Number</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: var(--comp-color);"></div>
+                    <span>Composite Number</span>
+                </div>
+            </div>
+
+            <div class="sequence-container" id="sequence-output">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        // BigInt Primality Test
+        function isPrime(n) {
+            if (n <= 1n) return false;
+            if (n <= 3n) return true;
+            if (n % 2n === 0n || n % 3n === 0n) return false;
+            
+            for (let i = 5n; i * i <= n; i += 6n) {
+                if (n % i === 0n || n % (i + 2n) === 0n) return false;
+            }
+            return true;
+        }
+
+        // Syracuse Operator: S(x) = (3x + 1) / 2^k
+        function syracuseStep(x) {
+            let next = 3n * x + 1n;
+            while (next % 2n === 0n) {
+                next /= 2n;
+            }
+            return next;
+        }
+
+        function analyzeSequence() {
+            const inputVal = document.getElementById('start-number').value;
+            const errorMsg = document.getElementById('error-msg');
+            const resultsDiv = document.getElementById('results');
+            
+            let x0;
+            try {
+                x0 = BigInt(inputVal);
+            } catch (e) {
+                errorMsg.style.display = 'block';
+                return;
+            }
+
+            if (x0 <= 1n || x0 % 2n === 0n) {
+                errorMsg.style.display = 'block';
+                return;
+            }
+
+            errorMsg.style.display = 'none';
+            
+            let current = x0;
+            const sequence = [current];
+            
+            // Generate sequence until it hits 1
+            while (current > 1n) {
+                current = syracuseStep(current);
+                sequence.push(current);
+            }
+
+            let primeCount = 0;
+            const sequenceContainer = document.getElementById('sequence-output');
+            sequenceContainer.innerHTML = ''; // Clear previous
+
+            // Analyze and render
+            sequence.forEach((num, index) => {
+                const isNumPrime = isPrime(num);
+                // We generally exclude the trivial 1 from prime calculations in this context
+                if (isNumPrime && num !== 1n) {
+                    primeCount++;
+                }
+
+                const span = document.createElement('span');
+                span.className = `number-badge ${isNumPrime ? 'prime' : 'composite'}`;
+                // Add an arrow if it's not the last element
+                span.textContent = num.toString() + (index < sequence.length - 1 ? ' →' : '');
+                sequenceContainer.appendChild(span);
+            });
+
+            // Exclude the starting number and the trivial 1 from the "steps" calculation if preferred, 
+            // but standard density looks at the whole generated orbit. We'll use orbit length > 1.
+            const evaluableSteps = sequence.length - 1; // Exclude the 1 at the end for percentage 
+            const density = evaluableSteps > 0 ? ((primeCount / evaluableSteps) * 100).toFixed(1) : 0;
+
+            document.getElementById('stat-steps').textContent = sequence.length - 1;
+            document.getElementById('stat-primes').textContent = primeCount;
+            document.getElementById('stat-density').textContent = `${density}%`;
+
+            resultsDiv.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
